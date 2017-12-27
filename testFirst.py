@@ -1,4 +1,3 @@
-# https://www.youtube.com/watch?v=T0Myf8B0Dj8&feature=youtu.be
 import requests
 # import pickle
 import pandas as pd
@@ -12,7 +11,10 @@ from sklearn.metrics import accuracy_score
 
 from subprocess import check_call
 
+# Исходное видео, по которому делался пример
+# https://www.youtube.com/watch?v=T0Myf8B0Dj8&feature=youtu.be
 
+# Вспомагательные фунуции
 def salary_currency(x):
     return x['currency'] if type(x) == dict else None
 
@@ -67,6 +69,7 @@ for i in range(max_vac_id, min_vac_id, -1):
     print(vac_url.format(i))
     vac.append(requests.get(vac_url.format(i)).json())
 
+# Создаём датафрейм
 df = pd.DataFrame(vac)
 
 df['salary_currency'] = df['salary'].map(salary_currency)
@@ -82,7 +85,7 @@ del df['specializations']
 
 print(set(df['profarea_id']))
 
-# Удаляем ненужное
+# Удаляем не нужные для обучения столбцы
 del df['accept_handicapped']
 del df['accept_kids']
 del df['alternate_url']
@@ -141,6 +144,8 @@ df['all_text'] = [
         df['description']
     )
 ]
+
+# Удаляем не нужные для обучения столбцы
 del df['name']
 del df['description']
 
@@ -155,7 +160,7 @@ df['with_salary'] = [
     )
 ]
 
-# Удаляем больше не нужные столбцы
+# Удаляем не нужные для обучения столбцы
 del df['salary_currency'], df['salary_from'], df['salary_gross'], df['salary_to']
 del df['branded_description']
 del df['department']
@@ -163,26 +168,37 @@ del df['department']
 texts = df['all_text']
 del df['all_text']
 
+# Создаем полускую матрицу, по которой будем провеодить обучение
 df = pd.get_dummies(df)
 
+# Таргет в отдельную переменную и удаляем из датафрейма
 y = df['with_salary']
 del df['with_salary']
 
-X_train, x_test, Y_train, y_test = train_test_split(df, y, test_size=0.3)
+# Делим данные на две части, создаем треннировочный и тестовый нобор данных
+# test_size=0.3 - 30% это тестоые данные
+# X_train, Y_train - треннировочный
+# x_test, y_test - тестовый, для проверки качества обучения
+X_train, X_test, y_train, y_test = train_test_split(df, y, test_size=0.3)
 
+# Обучаем (алгоритм принятия решений), высота дерева max_depth=10
 dtc = DecisionTreeClassifier(max_depth=10)
-dtc.fit(X_train, Y_train)
+dtc.fit(X_train, y_train)
 
+# Сохраняем дерево в файле "test.dot"
 export_graphviz(dtc, feature_names=X_train.columns, out_file='c:\\temp\\test.dot', filled=True)
 
+# Конвертируем файл "test.dot" в "test.png"
 check_call(
     ['C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe', '-Tpng', 'c:\\temp\\test.dot', '-o', 'c:\\temp\\test.png'])
 
+# Обучаем, вложенность n_estimators=100
 rfc = RandomForestClassifier(n_estimators=100)
-rfc.fit(X_train, Y_train)
+rfc.fit(X_train, y_train)
 
-predict = rfc.predict(x_test)
+predict = rfc.predict(X_test)
 
+# Посчитаем додю верных отвветов
 print(accuracy_score(y_test, predict))
 
 # print(X_train)
