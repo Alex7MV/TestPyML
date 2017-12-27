@@ -11,7 +11,7 @@ from sklearn.metrics import accuracy_score
 
 from subprocess import check_call
 
-# Исходное видео, по которому делался пример
+# Исходное видео, по которому делался пример:
 # https://www.youtube.com/watch?v=T0Myf8B0Dj8&feature=youtu.be
 
 # Вспомагательные фунуции
@@ -177,8 +177,8 @@ del df['with_salary']
 
 # Делим данные на две части, создаем треннировочный и тестовый нобор данных
 # test_size=0.3 - 30% это тестоые данные
-# X_train, Y_train - треннировочный
-# x_test, y_test - тестовый, для проверки качества обучения
+# X_train (фичи), Y_train (таргет) - треннировочный
+# x_test (фичи), y_test (таргет) - тестовый, для проверки качества обучения
 X_train, X_test, y_train, y_test = train_test_split(df, y, test_size=0.3)
 
 # Обучаем (алгоритм принятия решений), высота дерева max_depth=10
@@ -192,13 +192,14 @@ export_graphviz(dtc, feature_names=X_train.columns, out_file='c:\\temp\\test.dot
 check_call(
     ['C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe', '-Tpng', 'c:\\temp\\test.dot', '-o', 'c:\\temp\\test.png'])
 
-# Обучаем, вложенность n_estimators=100
+# Обучаем "набору случайных деревьев", количество деревьев n_estimators=100
 rfc = RandomForestClassifier(n_estimators=100)
 rfc.fit(X_train, y_train)
 
+# Предсказание ответов
 predict = rfc.predict(X_test)
 
-# Посчитаем додю верных отвветов
+# Посчитаем метрику, долю верных отвветов
 print(accuracy_score(y_test, predict))
 
 # print(X_train)
